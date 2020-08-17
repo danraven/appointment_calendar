@@ -1,0 +1,50 @@
+[
+    {
+      "id": "452935de-975e-11e5-ae1a-c8e0eb18c1e9",
+      "name": "Vanlig",
+      "slot_size": 15,
+      "public_bookable": true,
+      "color": "#ccc",
+      "icon": "icon-home",
+      "clinic_id": "00000000-0000-4000-a002-000000000002",
+      "deleted": null,
+      "out_of_office": false,
+      "enabled": false
+    },
+    {
+      "id": "4529821e-975e-11e5-bbaf-c8e0eb18c1e9",
+      "name": "Lang vanlig",
+      "slot_size": 30,
+      "public_bookable": true,
+      "color": "#999",
+      "icon": "icon-home",
+      "clinic_id": "00000000-0000-4000-a002-000000000002",
+      "deleted": null,
+      "out_of_office": false,
+      "enabled": false
+    },
+    {
+      "id": "473787c2-975e-11e5-ae1a-c8e0eb18c1e9",
+      "name": "Vanlig",
+      "slot_size": 15,
+      "public_bookable": true,
+      "color": "#ccc",
+      "icon": "icon-home",
+      "clinic_id": "00000000-0000-4000-a002-000000000002",
+      "deleted": null,
+      "out_of_office": false,
+      "enabled": false
+    },
+    {
+      "id": "4737c5de-975e-11e5-bbaf-c8e0eb18c1e9",
+      "name": "Lang vanlig",
+      "slot_size": 30,
+      "public_bookable": true,
+      "color": "#999",
+      "icon": "icon-home",
+      "clinic_id": "00000000-0000-4000-a002-000000000002",
+      "deleted": null,
+      "out_of_office": false,
+      "enabled": false
+    }
+]
