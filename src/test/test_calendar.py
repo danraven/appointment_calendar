@@ -110,7 +110,7 @@ class CalendarTestCase(unittest.TestCase):
         self.calendar.allocate_time(datetime(2020, 8, 17, 8, 30), datetime(2020, 8, 17, 10), self.slot_types[0])
         self.calendar.set_appointment(datetime(2020, 8, 17, 8, 30), datetime(2020, 8, 17, 9, 30), self.patients[0])
         self.assertEqual(len(self.calendar.timeslots), 2)
-        with self.assertRaisesRegex(ValueError, "already an appointment"):
+        with self.assertRaisesRegex(ValueError, "outside of the time slot"):
             self.calendar.set_appointment(datetime(2020, 8, 17, 9, 15), datetime(2020, 8, 17, 9, 45), self.patients[1])
 
     def test_schedule_too_long(self):

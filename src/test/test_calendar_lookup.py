@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 from datetime import datetime
 from ..app.calendar import Calendar, Patient, SlotType
 
-class CalendarTestCase(unittest.TestCase):
+class CalendarLookupTestCase(unittest.TestCase):
     def setUp(self):
         self.calendar = Calendar(uuid4(), "Test Calendar")
         self.patients = [

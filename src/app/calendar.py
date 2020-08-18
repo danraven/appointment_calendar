@@ -28,12 +28,18 @@ class TimeSlot:
         return delta.total_seconds() / 60
 
     def split_by_interval(self, time_from: datetime, time_to: datetime):
+        # Do some sanity checks
         if time_to <= time_from:
             raise ValueError("Start time must be before end time")
         if time_from < self.time_from or time_to > self.time_to:
             raise ValueError("Cannot split by an interval outside of the time slot")
         if not self.is_available():
             raise ValueError("Cannot split a time slot that already has an appointment assigned to")
+
+        # Clone the time slot into 1-3 chunks and return it in a chronological order:
+        # Free time slot before the appointment (if any is left)
+        # The time slot with the appointment (always present)
+        # Free time slot after the appointment (if any is left)
         cut_part = copy(self)
         cut_part.time_from = time_from
         cut_part.time_to = time_to
@@ -53,6 +59,7 @@ class TimeSlot:
         return not self.appointment
 
     def is_type(self, slot_type: SlotType=None):
+        # For the sake of querying, if no SlotType is passed this returns as a match, though it can be argued that it makes little sense
         if not slot_type:
             return True
         return slot_type._id == self.type._id
@@ -67,6 +74,9 @@ class Calendar:
     def __init__(self, id: UUID, name: str):
         self._id = id
         self.name = name
+        # Time slots should be ordered by start/end date (and they cannot overlap)
+        # Two helper lists are created in tandem that hold the start and end dates as timestamps for easier search.
+        # They should be mutated along with the slots.
         self.timeslots = []
         self._start_indices = []
         self._end_indices = []
@@ -98,19 +108,18 @@ class Calendar:
         return slot
 
     def set_appointment(self, time_from: datetime, time_to: datetime, patient: Patient):
-        duration = (time_to - time_from).total_seconds() / 60
+        # Get the index right after the slot with an equal or earlier start date
         idx = bisect_right(self._start_indices, time_from.timestamp())
         if not idx:
             raise ValueError("There is no allocated time for this appointment")
-        idx = idx - 1
-        if self.timeslots[idx].get_duration() < duration:
-            raise ValueError("There is not enough time allocated for this appointment")
 
+        # Step back by one index to get the time frame the appointment might fit in
+        idx = idx - 1
         slot = self.timeslots[idx]
-        if not slot.is_available():
-            raise ValueError("There is already an appointment in this interval")
+        # The split function takes care of sanity checks, like whether there's already an appointment in this slot or if it's not long enough
         parts = slot.split_by_interval(time_from, time_to)
         appointment = None
+        # Remove the old time slot and replace it with the splits
         del self._start_indices[idx]
         del self._end_indices[idx]
         del self.timeslots[idx]
@@ -125,6 +134,7 @@ class Calendar:
         return appointment
 
     def find_available_time(self, time_from: datetime=None, time_to: datetime=None, slot_type: SlotType=None, duration: int=0):
+        # Go back/forward a year if no time range is set
         time_from = datetime.now() - timedelta(days=365) if not time_from else time_from
         time_to = datetime.now() + timedelta(days=365) if not time_to else time_to
 
