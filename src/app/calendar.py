@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from bisect import bisect_left, bisect_right
 from uuid import UUID
 from copy import copy
@@ -98,12 +98,14 @@ class Calendar:
         return slot
 
     def set_appointment(self, time_from: datetime, time_to: datetime, patient: Patient):
-        after_index = bisect_left(self._start_indices, time_from.timestamp())
-        before_index = bisect_left(self._end_indices, time_to.timestamp(), after_index)
-        if not len(self.timeslots) or before_index != after_index:
-            raise ValueError("There is no time allocated to this period")
+        duration = (time_to - time_from).total_seconds() / 60
+        idx = bisect_right(self._start_indices, time_from.timestamp())
+        if not idx:
+            raise ValueError("There is no allocated time for this appointment")
+        idx = idx - 1
+        if self.timeslots[idx].get_duration() < duration:
+            raise ValueError("There is not enough time allocated for this appointment")
 
-        idx = max(after_index - 1, 0)
         slot = self.timeslots[idx]
         if not slot.is_available():
             raise ValueError("There is already an appointment in this interval")
@@ -123,8 +125,8 @@ class Calendar:
         return appointment
 
     def find_available_time(self, time_from: datetime=None, time_to: datetime=None, slot_type: SlotType=None, duration: int=0):
-        time_from = datetime.min if not time_from else time_from
-        time_to = datetime.max if not time_to else time_to
+        time_from = datetime.now() - timedelta(days=365) if not time_from else time_from
+        time_to = datetime.now() + timedelta(days=365) if not time_to else time_to
 
         start_index = bisect_left(self._start_indices, time_from.timestamp())
         end_index = bisect_left(self._end_indices, time_to.timestamp())

@@ -37,5 +37,17 @@ class CalendarTestCase(unittest.TestCase):
         result = self.calendar.find_available_time()
         self.assertEqual(len(result), 5)
 
+    def test_get_by_type(self):
+        result = self.calendar.find_available_time(slot_type=self.slot_types[1])
+        self.assertEqual(len(result), 1)
+
+    def test_get_by_duration(self):
+        result = self.calendar.find_available_time(duration=120)
+        self.assertEqual(len(result), 3)
+
+    def test_get_by_range(self):
+        result = self.calendar.find_available_time(datetime(2020, 8, 17, 9), datetime(2020, 8, 17, 17, 30))
+        self.assertEqual(len(result), 4)
+
 if __name__ == "__main__":
     unittest.main()
