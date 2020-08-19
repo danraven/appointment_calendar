@@ -82,24 +82,33 @@ class Calendar:
         self._end_indices = []
 
     def allocate_time(self, time_from: datetime, time_to: datetime, slot_type: SlotType):
+        # Basic sanity check
         if time_to <= time_from:
             raise ValueError("Start time must be before end time")
+        # Get the index that's:
+        # 1. after the slot that ends before our start time
+        # 2. before our end time
         after_index = bisect_right(self._end_indices, time_from.timestamp())
         before_index = bisect_left(self._start_indices, time_to.timestamp(), after_index)
+        # If all's correct it both should point to the same spot, otherwise there's an overlap
         if before_index != after_index:
             raise ValueError("There is already time allocated to this interval")
+        # Lookbehind: if there is a slot before that ends exactly as ours begin, is available and is of the same type, we just extend and return that
         if after_index > 0 and self._end_indices[after_index - 1] == time_from.timestamp():
             prev_slot = self.timeslots[after_index - 1]
             if prev_slot.is_available() and prev_slot.is_type(slot_type):
                 prev_slot.time_to = time_to
                 self._end_indices[after_index - 1] = time_to.timestamp()
                 return prev_slot
+        # Lookahead: same with the slot after
+        # TODO: Implement merging; two slots with a hole between them should be merged into one if time is allocated there
         if after_index < len(self.timeslots) and self._start_indices[after_index] == time_to.timestamp():
             next_slot = self.timeslots[after_index]
             if next_slot.is_available() and next_slot.is_type(slot_type):
                 next_slot.time_from = time_from
                 self._start_indices[after_index] = time_from.timestamp()
                 return next_slot
+        # Otherwise just create the new time slot and insert it into its place
         slot = TimeSlot(time_from, time_to, slot_type)
         slot.calendar = self
         self.timeslots.insert(after_index, slot)
@@ -137,15 +146,22 @@ class Calendar:
         # Go back/forward a year if no time range is set
         time_from = datetime.now() - timedelta(days=365) if not time_from else time_from
         time_to = datetime.now() + timedelta(days=365) if not time_to else time_to
+        timestamp_from = time_from.timestamp()
+        timestamp_to = time_to.timestamp()
 
-        start_index = bisect_left(self._start_indices, time_from.timestamp())
-        end_index = bisect_left(self._end_indices, time_to.timestamp())
-        if start_index > 0 and self.timeslots[start_index - 1].time_to > time_from:
-            start_index = start_index - 1
-        if end_index < len(self.timeslots) - 1 and self.timeslots[end_index + 1].time_from < time_to:
-            end_index = end_index + 1
-
-        if start_index > end_index or start_index == len(self.timeslots):
+        # Get an index range of timeslots to consider
+        start_index = bisect_left(self._start_indices, timestamp_from)
+        end_index = bisect_right(self._end_indices, timestamp_to, start_index)
+        # If either index is out of bounds there are definitely no matches
+        if start_index == len(self.timeslots) or not end_index:
             return []
 
+        # If there's a time slot before that starts before but ends after the start time (with sufficient duration), include that to the list
+        if start_index > 0 and (self._end_indices[start_index - 1] - timestamp_from) / 60 >= duration:
+            start_index = start_index - 1
+        # Similarly if there's a time slot after that starts before the end time, include that as well
+        if end_index <= len(self.timeslots) - 1 and (timestamp_to - self._start_indices[end_index]) / 60 >= duration:
+            end_index = end_index + 1
+
+        # Filter down the matched candidates by availability, duration and slot type
         return list(filter(lambda slot: slot.is_available() and slot.get_duration() >= duration and slot.is_type(slot_type), self.timeslots[start_index:end_index]))

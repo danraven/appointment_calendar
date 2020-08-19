@@ -49,5 +49,13 @@ class CalendarLookupTestCase(unittest.TestCase):
         result = self.calendar.find_available_time(datetime(2020, 8, 17, 9), datetime(2020, 8, 17, 17, 30))
         self.assertEqual(len(result), 4)
 
+    def test_get_empty(self):
+        result = self.calendar.find_available_time(datetime(2020, 8, 20, 10), datetime(2020, 8, 20, 15))
+        self.assertEqual(len(result), 0)
+
+    def test_get_by_multiple_filters(self):
+        result = self.calendar.find_available_time(datetime(2020, 8, 17, 9, 30), datetime(2020, 8, 17, 19), duration=60, slot_type=self.slot_types[0])
+        self.assertEqual(len(result), 1)
+
 if __name__ == "__main__":
     unittest.main()
