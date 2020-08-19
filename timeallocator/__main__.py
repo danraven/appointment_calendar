@@ -34,10 +34,11 @@ class CalendarSearch:
             calendar.set_appointment(datetime.fromisoformat(a_row['start']), datetime.fromisoformat(a_row['end']), self.patients[a_row['patient_id']])
         self.calendars[str(id)] = calendar
 
-    def find_available_time(self, calendars: Iterable[UUID], duration: int=0, time_from: datetime=None, time_to: datetime=None, slot_type: UUID=None):
+    def find_available_time(self, calendars: Iterable[UUID], duration: int=0, time_from: datetime=None, time_to: datetime=None, slot_type_id: UUID=None):
         results = {}
         for entry in calendars:
             id_str = str(entry)
+            slot_type = self.slot_types[str(slot_type_id)]
             if id_str not in self.calendars.keys():
                 raise ValueError("Calendar ID not found")
             results[id_str] = self.calendars[id_str].find_available_time(time_from, time_to, duration=duration, slot_type=slot_type)
